@@ -88,49 +88,50 @@ public class StatusBar extends CordovaPlugin {
             return true;
         }
 
-        if ("show".equals(action)) {
-            this.cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // SYSTEM_UI_FLAG_FULLSCREEN is available since JellyBean, but we
-                    // use KitKat here to be aligned with "Fullscreen"  preference
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        int uiOptions = window.getDecorView().getSystemUiVisibility();
-                        uiOptions &= ~View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-                        uiOptions &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
+        // [workaround] 안드로이드 같은 경우에 스테이터스바 조작을 할 경우에 전체를 가려버리고, 스크롤 오버플로우가 제대로 동작하지 않는 문제가 있어서, 해당 부분만 주석처리한다.
+        // if ("show".equals(action)) {
+        //     this.cordova.getActivity().runOnUiThread(new Runnable() {
+        //         @Override
+        //         public void run() {
+        //             // SYSTEM_UI_FLAG_FULLSCREEN is available since JellyBean, but we
+        //             // use KitKat here to be aligned with "Fullscreen"  preference
+        //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        //                 int uiOptions = window.getDecorView().getSystemUiVisibility();
+        //                 uiOptions &= ~View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        //                 uiOptions &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
 
-                        window.getDecorView().setSystemUiVisibility(uiOptions);
-                    }
+        //                 window.getDecorView().setSystemUiVisibility(uiOptions);
+        //             }
 
-                    // CB-11197 We still need to update LayoutParams to force status bar
-                    // to be hidden when entering e.g. text fields
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                }
-            });
-            return true;
-        }
+        //             // CB-11197 We still need to update LayoutParams to force status bar
+        //             // to be hidden when entering e.g. text fields
+        //             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //         }
+        //     });
+        //     return true;
+        // }
 
-        if ("hide".equals(action)) {
-            this.cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // SYSTEM_UI_FLAG_FULLSCREEN is available since JellyBean, but we
-                    // use KitKat here to be aligned with "Fullscreen"  preference
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        int uiOptions = window.getDecorView().getSystemUiVisibility()
-                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        // if ("hide".equals(action)) {
+        //     this.cordova.getActivity().runOnUiThread(new Runnable() {
+        //         @Override
+        //         public void run() {
+        //             // SYSTEM_UI_FLAG_FULLSCREEN is available since JellyBean, but we
+        //             // use KitKat here to be aligned with "Fullscreen"  preference
+        //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        //                 int uiOptions = window.getDecorView().getSystemUiVisibility()
+        //                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        //                         | View.SYSTEM_UI_FLAG_FULLSCREEN;
 
-                        window.getDecorView().setSystemUiVisibility(uiOptions);
-                    }
+        //                 window.getDecorView().setSystemUiVisibility(uiOptions);
+        //             }
 
-                    // CB-11197 We still need to update LayoutParams to force status bar
-                    // to be hidden when entering e.g. text fields
-                    window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                }
-            });
-            return true;
-        }
+        //             // CB-11197 We still need to update LayoutParams to force status bar
+        //             // to be hidden when entering e.g. text fields
+        //             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //         }
+        //     });
+        //     return true;
+        // }
 
         if ("backgroundColorByHexString".equals(action)) {
             this.cordova.getActivity().runOnUiThread(new Runnable() {
