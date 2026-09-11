@@ -1,0 +1,17 @@
+package.json
+  h_c361fc9afef753 3
+plugin.xml
+  h_c361fc9afef753 25
+src/android/StatusBar.java
+  h_c361fc9afef753 29-31,45-53,259-267,269-271,273-275,277-311,313-321
+---
+{
+  "schema_version": "zax-attestation/1.2.0",
+  "base_commit_sha": "119095c4d73cb96d71e23f24bf7a70afe7445beb",
+  "prompts": {},
+  "humans": {
+    "h_c361fc9afef753": {
+      "author": "flynn@zigbang.com"
+    }
+  }
+}
