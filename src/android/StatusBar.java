@@ -26,6 +26,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaInterface;
@@ -38,6 +41,15 @@ import java.util.Arrays;
 
 public class StatusBar extends CordovaPlugin {
     private static final String TAG = "StatusBar";
+
+    /**
+     * 마지막으로 JS 에서 요청한 스타일.
+     *
+     * cordova-android 15 의 SystemBarPlugin 이 onResume·configuration 변경 때마다
+     * BackgroundColor preference 기준으로 아이콘 색을 되돌려버린다.
+     * 그래서 이 값을 들고 있다가 onResume 뒤에 다시 적용한다.
+     */
+    private String lastRequestedStyle = null;
 
     /**
      * Sets the context of the Command. This can then be used to do things like
@@ -244,34 +256,68 @@ public class StatusBar extends CordovaPlugin {
         }
     }
 
+    /**
+     * 상태바 아이콘(시계·배터리) 색을 바꾼다.
+     *
+     * 원본은 View#setSystemUiVisibility 와 SYSTEM_UI_FLAG_LIGHT_STATUS_BAR 를 썼지만,
+     * 이 API 는 API 30 에서 deprecated 되고 targetSdk 35+ 에서는 아무 일도 하지 않는다.
+     *
+     * appearanceLight = true  -> 어두운 아이콘 (밝은 배경용, style "default")
+     * appearanceLight = false -> 흰 아이콘   (어두운 배경용, style "lightcontent")
+     */
     private void setStatusBarStyle(final String style) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (style != null && !style.isEmpty()) {
-                View decorView = cordova.getActivity().getWindow().getDecorView();
-                int uiOptions = decorView.getSystemUiVisibility();
-
-                String[] darkContentStyles = {
-                    "default",
-                };
-
-                String[] lightContentStyles = {
-                    "lightcontent",
-                    "blacktranslucent",
-                    "blackopaque",
-                };
-
-                if (Arrays.asList(darkContentStyles).contains(style.toLowerCase())) {
-                    decorView.setSystemUiVisibility(uiOptions | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    return;
-                }
-
-                if (Arrays.asList(lightContentStyles).contains(style.toLowerCase())) {
-                    decorView.setSystemUiVisibility(uiOptions & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                    return;
-                }
-
-                LOG.e(TAG, "Invalid style, must be either 'default', 'lightcontent' or the deprecated 'blacktranslucent' and 'blackopaque'");
-            }
+        if (style == null || style.isEmpty()) {
+            return;
         }
+
+        String[] darkContentStyles = {
+            "default",
+        };
+
+        String[] lightContentStyles = {
+            "lightcontent",
+            "blacktranslucent",
+            "blackopaque",
+        };
+
+        String normalized = style.toLowerCase();
+        boolean appearanceLight;
+
+        if (Arrays.asList(darkContentStyles).contains(normalized)) {
+            appearanceLight = true;
+        } else if (Arrays.asList(lightContentStyles).contains(normalized)) {
+            appearanceLight = false;
+        } else {
+            LOG.e(TAG, "Invalid style, must be either 'default', 'lightcontent' or the deprecated 'blacktranslucent' and 'blackopaque'");
+            return;
+        }
+
+        lastRequestedStyle = normalized;
+        applyAppearanceLightStatusBars(appearanceLight);
+    }
+
+    private void applyAppearanceLightStatusBars(final boolean appearanceLight) {
+        Window window = cordova.getActivity().getWindow();
+        WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(window, window.getDecorView());
+        controller.setAppearanceLightStatusBars(appearanceLight);
+    }
+
+    @Override
+    public void onResume(boolean multitasking) {
+        super.onResume(multitasking);
+
+        if (lastRequestedStyle == null) {
+            return;
+        }
+
+        // SystemBarPlugin 이 runOnUiThread 로 예약한 updateSystemBars 뒤에 실행되도록 큐에 넣는다.
+        final Window window = cordova.getActivity().getWindow();
+        window.getDecorView().post(new Runnable() {
+            @Override
+            public void run() {
+                setStatusBarStyle(lastRequestedStyle);
+            }
+        });
     }
 }
